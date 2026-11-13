@@ -21,6 +21,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:banner="@drawable/banner"
+            android:label="Lumen"
             android:launchMode="singleTask"
             android:configChanges="orientation|screenSize|keyboardHidden|keyboard|navigation|uiMode|smallestScreenSize|screenLayout"
             android:screenOrientation="landscape">
