@@ -21,7 +21,7 @@ jobs:
         with:
           gradle-version: '8.9'
       - name: Compiler
-        run: gradle --no-daemon assembleDebug
+        run: gradle --no-daemon assembleDebug -PVC=${{ github.run_number }}
       - name: Préparer le fichier
         run: cp app/build/outputs/apk/debug/app-debug.apk lumen.apk
       - uses: actions/upload-artifact@v4

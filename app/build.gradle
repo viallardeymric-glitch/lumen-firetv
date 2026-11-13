@@ -10,9 +10,22 @@ android {
         applicationId 'fr.lumen.tv'
         minSdk 22
         targetSdk 28      // Fire OS 7 = Android 9 : permet de lancer l'appli au démarrage
-        versionCode 1
-        versionName '1.0'
+        versionCode (project.findProperty('VC') ?: '1').toInteger()
+        versionName '1.1'
         buildConfigField 'String', 'LUMEN_URL', "\"${project.findProperty('LUMEN_URL') ?: 'http://192.168.1.34:8800/?tv=1'}\""
+    }
+    signingConfigs {
+        lumen {
+            // Clé fixe : sans elle, chaque compilation GitHub est signée autrement et le Fire Stick refuse la mise à jour.
+            storeFile file('../lumen.keystore')
+            storePassword 'lumen123'
+            keyAlias 'lumen'
+            keyPassword 'lumen123'
+        }
+    }
+    buildTypes {
+        debug { signingConfig signingConfigs.lumen }
+        release { signingConfig signingConfigs.lumen }
     }
     buildFeatures { buildConfig true }
     compileOptions {
