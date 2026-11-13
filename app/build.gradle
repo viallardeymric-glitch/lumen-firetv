@@ -10,7 +10,7 @@ android {
         applicationId 'fr.lumen.tv'
         minSdk 22
         targetSdk 28      // Fire OS 7 = Android 9 : permet de lancer l'appli au démarrage
-        versionCode (project.findProperty('VC') ?: '1').toInteger()
+        versionCode Integer.valueOf((project.findProperty('VC') ?: '1').toString())
         versionName '1.1'
         buildConfigField 'String', 'LUMEN_URL', "\"${project.findProperty('LUMEN_URL') ?: 'http://192.168.1.34:8800/?tv=1'}\""
     }
