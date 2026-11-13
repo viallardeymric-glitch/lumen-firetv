@@ -45,6 +45,7 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
+        s.setUseWideViewPort(true);      // Lumen demande une page de 1280 px de large (taille « télé »)
         s.setLoadWithOverviewMode(true);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         // « AFT » dans le user-agent : Lumen active son mode télé.
