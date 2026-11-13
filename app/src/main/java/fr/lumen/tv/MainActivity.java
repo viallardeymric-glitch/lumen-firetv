@@ -10,6 +10,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -25,6 +26,7 @@ public class MainActivity extends Activity {
     private View videoPlein;
     private WebChromeClient.CustomViewCallback videoRappel;
     private boolean erreur = false;
+    private volatile boolean capterVolume = false;   // vrai pendant la lecture : le volume des HomePod passe par la télécommande
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Runnable reessayer = new Runnable() {
         @Override public void run() { if (web != null && erreur) { erreur = false; web.loadUrl(BuildConfig.LUMEN_URL); } }
@@ -69,6 +71,9 @@ public class MainActivity extends Activity {
             @Override public void onReceivedSslError(WebView v, android.webkit.SslErrorHandler h, SslError e) { h.cancel(); }
             @Override public void onPageFinished(WebView v, String url) { if (!url.startsWith("data:")) erreur = false; }
         });
+        web.addJavascriptInterface(new Object() {
+            @JavascriptInterface public void capterVolume(boolean oui) { capterVolume = oui; }
+        }, "LumenTV");
         web.loadUrl(BuildConfig.LUMEN_URL);
     }
 
@@ -120,12 +125,21 @@ public class MainActivity extends Activity {
             case KeyEvent.KEYCODE_MEDIA_PAUSE: touche("MediaPlayPause"); return true;
             case KeyEvent.KEYCODE_MEDIA_REWIND: touche("MediaRewind"); return true;
             case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: touche("MediaFastForward"); return true;
+            case KeyEvent.KEYCODE_VOLUME_UP: if (capterVolume) { touche("AudioVolumeUp"); return true; } break;
+            case KeyEvent.KEYCODE_VOLUME_DOWN: if (capterVolume) { touche("AudioVolumeDown"); return true; } break;
+            case KeyEvent.KEYCODE_VOLUME_MUTE: if (capterVolume) { touche("AudioVolumeMute"); return true; } break;
             case KeyEvent.KEYCODE_BACK:
                 if (videoPlein != null) { web.getWebChromeClient().onHideCustomView(); return true; }
                 if (web.canGoBack()) { web.goBack(); return true; }
                 return true; // on ne quitte jamais Lumen avec Retour
         }
         return super.onKeyDown(code, e);
+    }
+
+    @Override
+    public boolean onKeyUp(int code, KeyEvent e) {
+        if (capterVolume && (code == KeyEvent.KEYCODE_VOLUME_UP || code == KeyEvent.KEYCODE_VOLUME_DOWN || code == KeyEvent.KEYCODE_VOLUME_MUTE)) return true;
+        return super.onKeyUp(code, e);
     }
 
     @Override
