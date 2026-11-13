@@ -1,0 +1,23 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'fr.lumen.tv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'fr.lumen.tv'
+        minSdk 22
+        targetSdk 28      // Fire OS 7 = Android 9 : permet de lancer l'appli au démarrage
+        versionCode 1
+        versionName '1.0'
+        buildConfigField 'String', 'LUMEN_URL', "\"${project.findProperty('LUMEN_URL') ?: 'http://192.168.1.34:8800/?tv=1'}\""
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lint { abortOnError false; checkReleaseBuilds false }
+}
