@@ -6,7 +6,9 @@ import android.net.http.SslError;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.KeyEvent;
+import java.util.ArrayDeque;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -26,15 +28,37 @@ public class MainActivity extends Activity {
     private View videoPlein;
     private WebChromeClient.CustomViewCallback videoRappel;
     private boolean erreur = false;
-    private volatile boolean capterVolume = false;   // vrai pendant la lecture : le volume des HomePod passe par la télécommande
+    private static volatile MainActivity instance;
+    private static volatile boolean capterVolume = false;
+    private static final ArrayDeque<String> dernieres = new ArrayDeque<>();   // vrai pendant la lecture : le volume des HomePod passe par la télécommande
     private final Handler main = new Handler(Looper.getMainLooper());
     private final Runnable reessayer = new Runnable() {
         @Override public void run() { if (web != null && erreur) { erreur = false; web.loadUrl(BuildConfig.LUMEN_URL); } }
     };
 
+    /** Mémorise les dernières touches reçues (pour le test de la télécommande dans les réglages). */
+    static void noter(String source, int code) {
+        synchronized (dernieres) {
+            dernieres.addLast(source + " " + KeyEvent.keyCodeToString(code).replace("KEYCODE_", ""));
+            while (dernieres.size() > 14) dernieres.removeFirst();
+        }
+    }
+    static boolean capte() { return capterVolume && instance != null; }
+    static void envoyer(final String key) {
+        final MainActivity a = instance;
+        if (a != null) a.main.post(new Runnable() { @Override public void run() { a.touche(key); } });
+    }
+    private boolean serviceActif() {
+        try {
+            String v = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            return v != null && v.contains(getPackageName() + "/");
+        } catch (Exception e) { return false; }
+    }
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        instance = this;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         racine = new FrameLayout(this);
         racine.setBackgroundColor(Color.parseColor("#0b0c0f"));
@@ -73,6 +97,8 @@ public class MainActivity extends Activity {
         });
         web.addJavascriptInterface(new Object() {
             @JavascriptInterface public void capterVolume(boolean oui) { capterVolume = oui; }
+            @JavascriptInterface public boolean serviceActif() { return MainActivity.this.serviceActif(); }
+            @JavascriptInterface public String touches() { synchronized (dernieres) { StringBuilder sb = new StringBuilder(); for (String x : dernieres) sb.append(x).append('\n'); return sb.toString(); } }
         }, "LumenTV");
         web.loadUrl(BuildConfig.LUMEN_URL);
     }
@@ -118,6 +144,7 @@ public class MainActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int code, KeyEvent e) {
+        if (e.getRepeatCount() == 0) noter("app", code);
         switch (code) {
             case KeyEvent.KEYCODE_MENU: touche("ContextMenu"); return true;
             case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
@@ -145,6 +172,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         main.removeCallbacksAndMessages(null);
+        if (instance == this) instance = null;
         web.destroy();
         super.onDestroy();
     }

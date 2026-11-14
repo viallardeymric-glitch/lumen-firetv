@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="service_desc">Permet à Lumen de lire les touches de volume de la télécommande pendant un film, pour régler les HomePod.</string>
+</resources>
